@@ -85,7 +85,7 @@ use conn::{
 };
 
 use errors::{
-    ErrorKind,
+    MentatError,
     Result,
 };
 
@@ -277,12 +277,12 @@ impl<'a, 'c> InProgressBuilder<'a, 'c> {
                 let provided = tv.value_type();
                 let expected = attr.value_type;
                 if provided != expected {
-                    bail!(ErrorKind::ValueTypeMismatch(provided, expected));
+                    bail!(MentatError::ValueTypeMismatch(provided, expected));
                 }
             }
             attribute = aa;
         } else {
-            bail!(ErrorKind::UnknownAttribute(a.to_string()));
+            bail!(MentatError::UnknownAttribute(a.to_string()));
         }
         Ok((attribute, v))
     }
@@ -386,7 +386,7 @@ mod testing {
     };
 
     // For matching inside a test.
-    use mentat_db::ErrorKind::{
+    use mentat_db::MentatError::{
         UnrecognizedEntid,
     };
 
@@ -429,7 +429,7 @@ mod testing {
         let mut in_progress = conn.begin_transaction(&mut sqlite).expect("begun successfully");
 
         // This should fail: unrecognized entid.
-        if let Err(Error(ErrorKind::DbError(UnrecognizedEntid(e)), _)) = in_progress.transact_terms(terms, tempids) {
+        if let Err(Error(MentatError::DbError(UnrecognizedEntid(e)), _)) = in_progress.transact_terms(terms, tempids) {
             assert_eq!(e, 999);
         } else {
             panic!("Should have rejected the entid.");

@@ -11,7 +11,8 @@
 #![recursion_limit="128"]
 
 #[macro_use]
-extern crate error_chain;
+extern crate failure_derive;
+extern crate failure;
 
 #[macro_use]
 extern crate lazy_static;
@@ -103,6 +104,7 @@ macro_rules! kw {
 
 pub mod conn;
 pub mod entity_builder;
+#[macro_use]
 pub mod errors;
 pub mod ident;
 pub mod query;
