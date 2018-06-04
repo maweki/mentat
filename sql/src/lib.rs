@@ -38,7 +38,8 @@ pub enum MentatSqlError {
     BindParamCouldBeGenerated(String)
 }
 
-pub type BuildQueryResult = Result<(), MentatSqlError>;
+pub type BuildQueryResult<T> = Result<T, MentatSqlError>;
+pub type EmptyBuildQueryResult = BuildQueryResult<()>;
 
 /// We want to accumulate values that will later be substituted into a SQL statement execution.
 /// This struct encapsulates the generated string and the _initial_ argument list.
@@ -55,30 +56,30 @@ pub struct SQLQuery {
 /// https://github.com/diesel-rs/diesel/blob/4885f61b8205f7f3c2cfa03837ed6714831abe6b/diesel/src/query_builder/mod.rs#L56
 pub trait QueryBuilder {
     fn push_sql(&mut self, sql: &str);
-    fn push_identifier(&mut self, identifier: &str) -> BuildQueryResult;
-    fn push_typed_value(&mut self, value: &TypedValue) -> BuildQueryResult;
-    fn push_bind_param(&mut self, name: &str) -> BuildQueryResult;
+    fn push_identifier(&mut self, identifier: &str) -> EmptyBuildQueryResult;
+    fn push_typed_value(&mut self, value: &TypedValue) -> EmptyBuildQueryResult;
+    fn push_bind_param(&mut self, name: &str) -> EmptyBuildQueryResult;
     fn finish(self) -> SQLQuery;
 }
 
 pub trait QueryFragment {
-    fn push_sql(&self, out: &mut QueryBuilder) -> BuildQueryResult;
+    fn push_sql(&self, out: &mut QueryBuilder) -> EmptyBuildQueryResult;
 }
 
 impl QueryFragment for Box<QueryFragment> {
-    fn push_sql(&self, out: &mut QueryBuilder) -> BuildQueryResult {
+    fn push_sql(&self, out: &mut QueryBuilder) -> EmptyBuildQueryResult {
         QueryFragment::push_sql(&**self, out)
     }
 }
 
 impl<'a> QueryFragment for &'a QueryFragment {
-    fn push_sql(&self, out: &mut QueryBuilder) -> BuildQueryResult {
+    fn push_sql(&self, out: &mut QueryBuilder) -> EmptyBuildQueryResult {
         QueryFragment::push_sql(&**self, out)
     }
 }
 
 impl QueryFragment for () {
-    fn push_sql(&self, _out: &mut QueryBuilder) -> BuildQueryResult {
+    fn push_sql(&self, _out: &mut QueryBuilder) -> EmptyBuildQueryResult {
         Ok(())
     }
 }
@@ -139,14 +140,14 @@ impl QueryBuilder for SQLiteQueryBuilder {
         self.sql.push_str(sql);
     }
 
-    fn push_identifier(&mut self, identifier: &str) -> BuildQueryResult {
+    fn push_identifier(&mut self, identifier: &str) -> EmptyBuildQueryResult {
         self.push_sql("`");
         self.push_sql(&identifier.replace("`", "``"));
         self.push_sql("`");
         Ok(())
     }
 
-    fn push_typed_value(&mut self, value: &TypedValue) -> BuildQueryResult {
+    fn push_typed_value(&mut self, value: &TypedValue) -> EmptyBuildQueryResult {
         use TypedValue::*;
         match value {
             &Ref(entid) => self.push_sql(entid.to_string().as_str()),
@@ -200,7 +201,7 @@ impl QueryBuilder for SQLiteQueryBuilder {
     /// returns an `InvalidParameterName` error result.
     /// Callers should make sure that the name doesn't overlap with generated parameter names. If
     /// it does, `BindParamCouldBeGenerated` is the error.
-    fn push_bind_param(&mut self, name: &str) -> BuildQueryResult {
+    fn push_bind_param(&mut self, name: &str) -> EmptyBuildQueryResult {
         // Do some validation first.
         // This is not free, but it's probably worth it for now.
         if !name.chars().all(|c| char::is_alphanumeric(c) || c == '_') {
