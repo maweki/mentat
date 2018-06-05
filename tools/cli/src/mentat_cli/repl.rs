@@ -11,6 +11,8 @@
 use std::io::Write;
 use std::process;
 
+use failure::Error;
+
 use tabwriter::TabWriter;
 
 use termion::{
@@ -467,7 +469,7 @@ impl Repl {
         output.flush().unwrap();
     }
 
-    fn print_results(&self, query_output: QueryOutput) -> Result<(), ::errors::Error> {
+    fn print_results(&self, query_output: QueryOutput) -> Result<(), Error> {
         let stdout = ::std::io::stdout();
         let mut output = TabWriter::new(stdout.lock());
 
