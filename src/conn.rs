@@ -913,11 +913,11 @@ mod tests {
                        .partition_map[":db.part/user"].index;
         let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next + 1);
 
-        match conn.transact(&mut sqlite, t.as_str()).unwrap_err() {
-            Error(MentatError::DbError(::mentat_db::errors::MentatError::UnrecognizedEntid(e)), _) => {
+        match conn.transact(&mut sqlite, t.as_str()).expect_err("expected transact error") {
+            Ok(::mentat_db::ErrorKind::UnrecognizedEntid(e)) => {
                 assert_eq!(e, next + 1);
             },
-            x => panic!("expected transact error, got {:?}", x),
+            x => panic!("expected db error, got {:?}", x),
         }
 
         // Transact two more tempids.
@@ -940,12 +940,12 @@ mod tests {
         // we should reject this, because the first ID was provided by the user!
         let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next);
 
-        match conn.transact(&mut sqlite, t.as_str()).unwrap_err() {
-            Error(MentatError::DbError(::mentat_db::errors::MentatError::UnrecognizedEntid(e)), _) => {
+        match conn.transact(&mut sqlite, t.as_str()).expect_err("expected transact error").downcast() {
+            Ok(::mentat_db::errors::UnrecognizedEntid(e)) => {
                 // All this, despite this being the ID we were about to allocate!
                 assert_eq!(e, next);
             },
-            x => panic!("expected transact error, got {:?}", x),
+            x => panic!("expected db error, got {:?}", x),
         }
 
         // And if we subsequently transact in a way that allocates one ID, we _will_ use that one.
@@ -1112,8 +1112,8 @@ mod tests {
 
         // Bad transaction data: missing leading :db/add.
         let report = conn.transact(&mut sqlite, "[[\"t\" :db/ident :b/keyword]]");
-        match report.unwrap_err() {
-            Error(MentatError::EdnParseError(_), _) => { },
+        match report.expect_err("expected transact error").downcast() {
+            Ok(MentatError::EdnParseError(_)) => { },
             x => panic!("expected EDN parse error, got {:?}", x),
         }
 
@@ -1124,8 +1124,8 @@ mod tests {
         // Bad transaction based on state of store: conflicting upsert.
         let report = conn.transact(&mut sqlite, "[[:db/add \"u\" :db/ident :a/keyword]
                                                   [:db/add \"u\" :db/ident :b/keyword]]");
-        match report.unwrap_err() {
-            Error(MentatError::DbError(::mentat_db::errors::MentatError::SchemaConstraintViolation(_)), _) => { },
+        match report.expect_err("expected transact error").downcast() {
+            Ok(::mentat_db::errors::SchemaConstraintViolation::ConflictingUpserts {conflicting_upserts: _}) => { },
             x => panic!("expected schema constraint violation, got {:?}", x),
         }
     }
@@ -1143,8 +1143,8 @@ mod tests {
         let kw = kw!(:foo/bat);
         let schema = conn.current_schema();
         let res = conn.cache(&mut sqlite, &schema, &kw, CacheDirection::Forward, CacheAction::Register);
-        match res.unwrap_err() {
-            Error(MentatError::UnknownAttribute(msg), _) => assert_eq!(msg, ":foo/bat"),
+        match res.expect_err("expected cache to fail").downcast() {
+            Ok(MentatError::UnknownAttribute(msg)) => assert_eq!(msg, ":foo/bat"),
             x => panic!("expected UnknownAttribute error, got {:?}", x),
         }
     }

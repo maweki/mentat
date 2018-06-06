@@ -386,7 +386,7 @@ mod testing {
     };
 
     // For matching inside a test.
-    use mentat_db::MentatError::{
+    use mentat_db::ErrorKind::{
         UnrecognizedEntid,
     };
 
