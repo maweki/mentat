@@ -380,15 +380,10 @@ impl FromThing<KnownEntid> for TypedValueOr<TempIdHandle> {
 mod testing {
     extern crate mentat_db;
 
-    use errors::{
-        Error,
-        ErrorKind,
-    };
+    use errors::MentatError;
 
     // For matching inside a test.
-    use mentat_db::ErrorKind::{
-        UnrecognizedEntid,
-    };
+    use mentat_db::DbError;
 
     use ::{
         Conn,
@@ -429,7 +424,7 @@ mod testing {
         let mut in_progress = conn.begin_transaction(&mut sqlite).expect("begun successfully");
 
         // This should fail: unrecognized entid.
-        if let Err(Error(MentatError::DbError(UnrecognizedEntid(e)), _)) = in_progress.transact_terms(terms, tempids) {
+        if let Ok(DbError::UnrecognizedEntid(e)) = in_progress.transact_terms(terms, tempids).expect_err("expected transact to fail").downcast() {
             assert_eq!(e, 999);
         } else {
             panic!("Should have rejected the entid.");
