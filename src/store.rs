@@ -84,7 +84,7 @@ impl Store {
     pub fn open_empty(path: &str) -> Result<Store> {
         if !path.is_empty() {
             if Path::new(path).exists() {
-                bail!(ErrorKind::PathAlreadyExists(path.to_string()));
+                bail!(MentatError::PathAlreadyExists(path.to_string()));
             }
         }
 
