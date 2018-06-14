@@ -357,7 +357,7 @@ impl FindQuery {
 
             for var in parsed.in_vars.into_iter() {
                 if !set.insert(var.clone()) {
-                    bail!(ErrorKind::DuplicateVariableError(var.name(), ":in"));
+                    bail!(AlgebrizerError::DuplicateVariableError(var.name(), ":in"));
                 }
             }
 
@@ -369,7 +369,7 @@ impl FindQuery {
 
             for var in parsed.with.into_iter() {
                 if !set.insert(var.clone()) {
-                    bail!(ErrorKind::DuplicateVariableError(var.name(), ":with"));
+                    bail!(AlgebrizerError::DuplicateVariableError(var.name(), ":with"));
                 }
             }
 
@@ -379,7 +379,7 @@ impl FindQuery {
         // Make sure that if we have `:limit ?x`, `?x` appears in `:in`.
         if let Limit::Variable(ref v) = parsed.limit {
             if !in_vars.contains(v) {
-                bail!(ErrorKind::UnknownLimitVar(v.name()));
+                bail!(AlgebrizerError::UnknownLimitVar(v.name()));
             }
         }
 

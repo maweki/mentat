@@ -288,7 +288,7 @@ fn test_ground_tuple_duplicate_vars() {
     let e: InvalidBinding = bails(known, &q).downcast().expect("proper error");
     assert_eq!(e.function, PlainSymbol::plain("ground"));
     match e.inner.get_context() {
-        BindingError::RepeatedBoundVariable => {
+        &BindingError::RepeatedBoundVariable => {
         },
         _ => {
             panic!();
@@ -304,7 +304,7 @@ fn test_ground_rel_duplicate_vars() {
     let e: InvalidBinding = bails(known, &q).downcast().expect("expected InvalidBinding");
     assert_eq!(e.function, PlainSymbol::plain("ground"));
     match e.inner.get_context() {
-        BindingError::RepeatedBoundVariable => {
+        &BindingError::RepeatedBoundVariable => {
         },
         _ => {
             panic!();

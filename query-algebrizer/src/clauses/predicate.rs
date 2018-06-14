@@ -69,7 +69,7 @@ impl ConjoiningClauses {
     pub(crate) fn apply_type_anno(&mut self, anno: &TypeAnnotation) -> Result<()> {
         match ValueType::from_keyword(&anno.value_type) {
             Some(value_type) => self.add_type_requirement(anno.variable.clone(), ValueTypeSet::of_one(value_type)),
-            None => bail!(ErrorKind::InvalidArgumentType(PlainSymbol::plain("type"), ValueTypeSet::any(), 2)),
+            None => bail!(AlgebrizerError::InvalidArgumentType(PlainSymbol::plain("type"), ValueTypeSet::any(), 2)),
         }
         Ok(())
     }

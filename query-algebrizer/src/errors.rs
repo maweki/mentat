@@ -22,7 +22,6 @@ use failure::{
 };
 
 use mentat_core::{
-    EdnParseError,
     ValueType,
     ValueTypeSet,
 };
