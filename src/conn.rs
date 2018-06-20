@@ -914,7 +914,7 @@ mod tests {
         let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next + 1);
 
         match conn.transact(&mut sqlite, t.as_str()).expect_err("expected transact error") {
-            Ok(::mentat_db::ErrorKind::UnrecognizedEntid(e)) => {
+            Ok(::mentat_db::DbError::UnrecognizedEntid(e)) => {
                 assert_eq!(e, next + 1);
             },
             x => panic!("expected db error, got {:?}", x),
@@ -941,7 +941,7 @@ mod tests {
         let t = format!("[[:db/add {} :db.schema/attribute \"tempid\"]]", next);
 
         match conn.transact(&mut sqlite, t.as_str()).expect_err("expected transact error").downcast() {
-            Ok(::mentat_db::errors::UnrecognizedEntid(e)) => {
+            Ok(::mentat_db::DbError::UnrecognizedEntid(e)) => {
                 // All this, despite this being the ID we were about to allocate!
                 assert_eq!(e, next);
             },
@@ -1125,7 +1125,7 @@ mod tests {
         let report = conn.transact(&mut sqlite, "[[:db/add \"u\" :db/ident :a/keyword]
                                                   [:db/add \"u\" :db/ident :b/keyword]]");
         match report.expect_err("expected transact error").downcast() {
-            Ok(::mentat_db::errors::SchemaConstraintViolation::ConflictingUpserts {conflicting_upserts: _}) => { },
+            Ok(::mentat_db::SchemaConstraintViolation::ConflictingUpserts {conflicting_upserts: _}) => { },
             x => panic!("expected schema constraint violation, got {:?}", x),
         }
     }
